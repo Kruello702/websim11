@@ -1,0 +1,1008 @@
+<html><head><base href=".">
+<style>
+:root {
+  --chat-bg: #f5f7fb;
+  --user-bubble: #2b5ce5;
+  --ai-bubble: #e9ecf1;
+  --border-radius: 15px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
+  position: relative;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(43, 92, 229, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(156, 39, 176, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  animation: backgroundPulse 10s infinite;
+}
+
+@keyframes backgroundPulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.chat-container {
+  display: flex;
+  height: 100vh;
+  padding: 20px;
+  gap: 20px;
+}
+
+.user-screen, .ai-screen {
+  flex: 1;
+  background: #2a2a2a;
+  border-radius: var(--border-radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid rgba(43, 92, 229, 0.3);
+  box-shadow: 0 0 15px rgba(43, 92, 229, 0.2);
+  animation: glow 2s infinite;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 0 15px rgba(43, 92, 229, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(43, 92, 229, 0.4); }
+  100% { box-shadow: 0 0 15px rgba(43, 92, 229, 0.2); }
+}
+
+.avatar {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  margin-bottom: 20px;
+  background: #333;
+  overflow: hidden;
+}
+
+.ai-avatar {
+  animation: pulse 2s infinite;
+}
+
+.ai-avatar svg {
+  filter: drop-shadow(0 0 10px rgba(43, 92, 229, 0.5));
+}
+
+.ai-face {
+  fill: #4CAF50;
+  stroke: #333;
+  stroke-width: 2;
+  animation: colorShift 8s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 10px rgba(43, 92, 229, 0.5); }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(43, 92, 229, 0.8); }
+  100% { transform: scale(1); box-shadow: 0 0 10px rgba(43, 92, 229, 0.5); }
+}
+
+@keyframes colorShift {
+  0% { fill: #4CAF50; filter: drop-shadow(0 0 5px #4CAF50); }
+  33% { fill: #2196F3; filter: drop-shadow(0 0 5px #2196F3); }
+  66% { fill: #9c27b0; filter: drop-shadow(0 0 5px #9c27b0); }
+  100% { fill: #4CAF50; filter: drop-shadow(0 0 5px #4CAF50); }
+}
+
+.chat-window {
+  flex: 2;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-messages {
+  flex: 1;
+  background: var(--chat-bg);
+  border-radius: var(--border-radius);
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 15px;
+  margin: 4px 0;
+  transition: all 0.3s ease;
+  animation: messageSlide 0.5s ease-out;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@keyframes messageSlide {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-message {
+  align-self: flex-end;
+  background: var(--user-bubble);
+  color: white;
+}
+
+.ai-message {
+  align-self: flex-start;
+  background: var(--ai-bubble);
+  color: #333;
+}
+
+.shared-image {
+  max-width: 200px;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+.input-area {
+  padding: 20px;
+  background: white;
+  display: flex;
+  gap: 10px;
+}
+
+input[type="text"] {
+  flex-grow: 1;
+  padding: 12px;
+  border: 1px solid rgba(43, 92, 229, 0.3);
+  border-radius: 25px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 10px rgba(43, 92, 229, 0.1);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+input[type="text"]:focus {
+  box-shadow: 0 0 20px rgba(43, 92, 229, 0.3);
+  transform: scale(1.02);
+}
+
+button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 25px;
+  background: linear-gradient(45deg, var(--user-bubble), #4a90e2);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(43, 92, 229, 0.3);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(43, 92, 229, 0.5);
+}
+
+button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: rotate(45deg);
+  animation: buttonShine 3s infinite;
+}
+
+@keyframes buttonShine {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
+
+.file-upload {
+  padding: 12px;
+  background: #f0f0f0;
+  border-radius: 25px;
+  cursor: pointer;
+}
+
+.upload-btn {
+  margin-top: 20px;
+  background: #4CAF50;
+  padding: 12px 24px;
+  border-radius: 25px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-btn:hover {
+  background: #45a049;
+}
+
+.history-btn {
+  margin-top: 10px;
+  background: #7B68EE;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.modal-content {
+  position: relative;
+  background: rgba(255, 255, 255, 0.9);
+  margin: 50px auto;
+  padding: 20px;
+  width: 80%;
+  max-height: 80vh;
+  border-radius: var(--border-radius);
+  overflow-y: auto;
+  animation: modalSlide 0.5s ease-out;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+@keyframes modalSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #333;
+}
+
+.conversation-item {
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.conversation-item:hover {
+  background: #f5f5f5;
+}
+
+.language-selector {
+  margin-top: 10px;
+  background: #9c27b0;
+  width: 200px;
+  text-align: center;
+}
+
+.language-selector:hover {
+  background: #7b1fa2;
+}
+
+.language-list {
+  display: none;
+  position: absolute;
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  width: 200px;
+  z-index: 100;
+}
+
+.language-list.show {
+  display: block;
+}
+
+.language-option {
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.language-option:hover {
+  background: #f0f0f0;
+}
+
+.camera-btn {
+  margin-top: 10px;
+  background: #e91e63;
+  width: 200px;
+  text-align: center;
+}
+
+.camera-btn:hover {
+  background: #c2185b;
+}
+
+.camera-btn.active {
+  background: #ff4081;
+}
+
+.mic-btn {
+  margin-top: 10px;
+  background: #ff5722;
+  width: 200px;
+  text-align: center;
+}
+
+.mic-btn:hover {
+  background: #f4511e;
+}
+
+.mic-btn.active {
+  background: #ff7043;
+  animation: pulseRecord 1.5s infinite;
+}
+
+@keyframes pulseRecord {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); background: #ff1744; }
+  100% { transform: scale(1); }
+}
+
+.speech-status {
+  color: white;
+  font-size: 12px;
+  margin-top: 5px;
+  text-align: center;
+  min-height: 20px;
+}
+
+#videoContainer {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+#userVideo {
+  background: #333;
+  transition: all 0.3s ease;
+}
+
+.image-gallery {
+  width: 100%;
+  margin-top: 20px;
+  background: #333;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  height: 200px;
+  overflow-y: auto;
+}
+
+.gallery-title {
+  color: white;
+  margin-bottom: 10px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+}
+
+.gallery-image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.gallery-image:hover {
+  transform: scale(1.1) rotate(2deg);
+  border-color: rgba(43, 92, 229, 0.5);
+  box-shadow: 0 0 15px rgba(43, 92, 229, 0.3);
+}
+
+.image-preview-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-image {
+  max-width: 90%;
+  max-height: 90vh;
+}
+
+.clipboard-section {
+  flex: 1;
+  background: #f0f0f0;
+  border-radius: var(--border-radius);
+  margin-bottom: 10px;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.clipboard-item {
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: fadeSlideIn 0.5s ease-out;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.clipboard-item img {
+  max-width: 60px;
+  border-radius: 4px;
+}
+
+.clipboard-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 5px;
+}
+
+.clipboard-btn {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.delete-btn {
+  background: #ff4444;
+}
+
+.message .clipboard-add {
+  opacity: 0;
+  float: right;
+  padding: 2px 6px;
+  margin-left: 8px;
+  font-size: 12px;
+  background: #666;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.message:hover .clipboard-add {
+  opacity: 1;
+}
+</style>
+</head>
+<body>
+<div class="chat-container">
+  <div class="user-screen">
+    <div class="avatar">
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="40" r="25" fill="#666"/>
+        <rect x="25" y="70" width="50" height="30" fill="#666"/>
+      </svg>
+    </div>
+    <h2 style="color: white;">You</h2>
+    <label class="upload-btn">
+      <input type="file" accept="image/*" id="userImageUpload" style="display: none;">
+      &#x1f4f8; Upload Picture
+    </label>
+    <button class="camera-btn" onclick="toggleCamera()">
+      &#x1f4f9; Turn On Camera
+    </button>
+    <button class="mic-btn" onclick="toggleMicrophone()">
+      &#x1f3a4; Start Voice Chat
+    </button>
+    <div class="speech-status" id="speechStatus"></div>
+    <div id="videoContainer" style="display: none;">
+      <video id="userVideo" autoplay playsinline style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover;"></video>
+    </div>
+    <button class="history-btn" onclick="showHistory()">View History</button>
+
+    <div class="image-gallery">
+      <div class="gallery-title">Your Shared Images</div>
+      <div class="gallery-grid" id="userGallery">
+      </div>
+    </div>
+  </div>
+  
+  <div class="chat-window">
+    <div class="clipboard-section" id="clipboard">
+      <!-- Clipboard items will be added here -->
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <!-- Messages will be added here dynamically -->
+    </div>
+    <div class="input-area">
+      <label class="file-upload">
+        <input type="file" accept="image/*" id="imageUpload" style="display: none;">
+        &#x1f4ce;
+      </label>
+      <input type="text" id="messageInput" placeholder="Type your message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+  
+  <div class="ai-screen">
+    <div class="avatar ai-avatar">
+      <svg viewBox="0 0 100 100">
+        <circle class="ai-face" cx="50" cy="50" r="45"/>
+        <circle cx="35" cy="40" r="5" fill="#333"/>
+        <circle cx="65" cy="40" r="5" fill="#333"/>
+        <path d="M 30 65 Q 50 80 70 65" fill="none" stroke="#333" stroke-width="3"/>
+      </svg>
+    </div>
+    <h2 style="color: white;">AI Assistant</h2>
+    <button class="language-selector" onclick="toggleLanguageList()">Select Language &#x1f310;</button>
+    <div id="languageList" class="language-list">
+      <div class="language-option" onclick="changeLanguage(&apos;en&apos;)">English &#x1f1fa;&#x1f1f8;</div>
+      <div class="language-option" onclick="changeLanguage(&apos;es&apos;)">Espa&#xf1;ol &#x1f1ea;&#x1f1f8;</div>
+      <div class="language-option" onclick="changeLanguage(&apos;fr&apos;)">Fran&#xe7;ais &#x1f1eb;&#x1f1f7;</div>
+      <div class="language-option" onclick="changeLanguage(&apos;de&apos;)">Deutsch &#x1f1e9;&#x1f1ea;</div>
+      <div class="language-option" onclick="changeLanguage(&apos;it&apos;)">Italiano &#x1f1ee;&#x1f1f9;</div>
+      <div class="language-option" onclick="changeLanguage(&apos;pt&apos;)">Portugu&#xea;s &#x1f1f5;&#x1f1f9;</div>
+      <div class="language-option" onclick="changeLanguage(&apos;ja&apos;)">&#x65e5;&#x672c;&#x8a9e; &#x1f1ef;&#x1f1f5;</div>
+      <div class="language-option" onclick="changeLanguage(&apos;zh&apos;)">&#x4e2d;&#x6587; &#x1f1e8;&#x1f1f3;</div>
+    </div>
+
+    <div class="image-gallery">
+      <div class="gallery-title">AI Shared Images</div>
+      <div class="gallery-grid" id="aiGallery">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="historyModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeHistory()">&#xd7;</span>
+    <h2>Conversation History</h2>
+    <div id="conversationsList"></div>
+  </div>
+</div>
+
+<div class="image-preview-modal" id="imagePreviewModal" onclick="closeImagePreview()">
+  <img class="preview-image" id="previewImage">
+</div>
+
+<script>let isCameraOn = false;
+let videoStream = null;
+let conversationHistory = [];
+let userGalleryImages = [];
+let aiGalleryImages = [];
+let allConversations = JSON.parse(localStorage.getItem('chatHistory')) || [];
+let currentLanguage = 'en';
+let isListening = false;
+let recognition = null;
+let speechSynthesis = window.speechSynthesis;
+let clipboardItems = [];
+function saveToLocalStorage() {
+  if (conversationHistory.length > 0) {
+    const conversation = {
+      id: Date.now(),
+      timestamp: new Date().toLocaleString(),
+      messages: [...conversationHistory]
+    };
+    allConversations.push(conversation);
+    localStorage.setItem('chatHistory', JSON.stringify(allConversations));
+  }
+}
+function showHistory() {
+  const modal = document.getElementById('historyModal');
+  const listDiv = document.getElementById('conversationsList');
+  listDiv.innerHTML = '';
+  allConversations.reverse().forEach(conv => {
+    const convDiv = document.createElement('div');
+    convDiv.className = 'conversation-item';
+    convDiv.innerHTML = `
+      <h3>${conv.timestamp}</h3>
+      <p>${conv.messages[0]?.content || 'Empty conversation'}</p>
+    `;
+    convDiv.onclick = () => loadConversation(conv);
+    listDiv.appendChild(convDiv);
+  });
+  modal.style.display = 'block';
+}
+function closeHistory() {
+  document.getElementById('historyModal').style.display = 'none';
+}
+function loadConversation(conversation) {
+  userGalleryImages = [];
+  aiGalleryImages = [];
+  conversation.messages.forEach(msg => {
+    if (msg.image) {
+      if (msg.role === 'user') {
+        userGalleryImages.push(msg.image);
+      } else {
+        aiGalleryImages.push(msg.image);
+      }
+    }
+  });
+  updateGallery('userGallery', userGalleryImages);
+  updateGallery('aiGallery', aiGalleryImages);
+  const chatMessages = document.getElementById('chatMessages');
+  chatMessages.innerHTML = '';
+  conversation.messages.forEach(msg => {
+    addMessage(msg.content, msg.role === 'user', msg.image);
+  });
+  closeHistory();
+}
+async function getAIResponse(userMessage) {
+  try {
+    const response = await fetch('/api/ai_completion', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        prompt: `Respond as a helpful and friendly AI assistant in ${currentLanguage} language. Keep responses concise and engaging.
+        
+        <typescript-interface>
+        interface Response {
+          message: string;
+        }
+        </typescript-interface>
+        
+        <example>
+        {
+          "message": "That's an interesting point! I'd love to hear more about your perspective on this topic."
+        }
+        </example>`,
+        data: userMessage
+      })
+    });
+    const data = await response.json();
+    return data.message;
+  } catch (error) {
+    console.error('Error:', error);
+    return "I apologize, but I'm having trouble connecting right now. Please try again.";
+  }
+}
+function addMessage(content, isUser, imageUrl = null) {
+  const messagesDiv = document.getElementById('chatMessages');
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+  if (imageUrl) {
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.className = 'shared-image';
+    messageDiv.appendChild(img);
+    if (isUser) {
+      userGalleryImages.push(imageUrl);
+      updateGallery('userGallery', userGalleryImages);
+    } else {
+      aiGalleryImages.push(imageUrl);
+      updateGallery('aiGallery', aiGalleryImages);
+    }
+  }
+  const textSpan = document.createElement('span');
+  textSpan.textContent = content;
+  messageDiv.appendChild(textSpan);
+  if (!isUser) {
+    const clipboardBtn = document.createElement('button');
+    clipboardBtn.className = 'clipboard-add';
+    clipboardBtn.textContent = '📋';
+    clipboardBtn.onclick = () => addToClipboard(content, imageUrl);
+    messageDiv.appendChild(clipboardBtn);
+  }
+  messagesDiv.appendChild(messageDiv);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  conversationHistory.push({
+    role: isUser ? 'user' : 'ai',
+    content: content,
+    image: imageUrl
+  });
+  if (!isUser && isListening) {
+    speakAIResponse(content);
+  }
+}
+function updateGallery(galleryId, images) {
+  const gallery = document.getElementById(galleryId);
+  gallery.innerHTML = '';
+  images.forEach(imgUrl => {
+    const img = document.createElement('img');
+    img.src = imgUrl;
+    img.className = 'gallery-image';
+    img.onclick = () => showImagePreview(imgUrl);
+    gallery.appendChild(img);
+  });
+}
+function showImagePreview(imgUrl) {
+  const modal = document.getElementById('imagePreviewModal');
+  const previewImg = document.getElementById('previewImage');
+  previewImg.src = imgUrl;
+  modal.style.display = 'flex';
+}
+function closeImagePreview() {
+  document.getElementById('imagePreviewModal').style.display = 'none';
+}
+async function sendMessage() {
+  const input = document.getElementById('messageInput');
+  const message = input.value.trim();
+  if (message) {
+    addMessage(message, true);
+    input.value = '';
+    const aiResponse = await getAIResponse(message);
+    setTimeout(() => {
+      addMessage(aiResponse, false);
+      saveToLocalStorage();
+    }, 500);
+  }
+}
+document.getElementById('imageUpload').addEventListener('change', function (event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      addMessage('Shared an image:', true, e.target.result);
+      saveToLocalStorage();
+    };
+    reader.readAsDataURL(file);
+  }
+});
+document.getElementById('userImageUpload').addEventListener('change', function (event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      addMessage('Shared an image:', true, e.target.result);
+      saveToLocalStorage();
+    };
+    reader.readAsDataURL(file);
+  }
+});
+document.getElementById('messageInput').addEventListener('keypress', function (event) {
+  if (event.key === 'Enter') {
+    sendMessage();
+  }
+});
+window.onclick = function (event) {
+  const modal = document.getElementById('historyModal');
+  const languageList = document.getElementById('languageList');
+  const imagePreviewModal = document.getElementById('imagePreviewModal');
+  if (event.target === modal) {
+    closeHistory();
+  }
+  if (!event.target.matches('.language-selector') && !event.target.matches('.language-list')) {
+    languageList.classList.remove('show');
+  }
+  if (!event.target.matches('.camera-btn') && !event.target.matches('#userVideo')) {
+    const videoContainer = document.getElementById('videoContainer');
+    if (videoContainer && !videoContainer.contains(event.target)) {}
+  }
+  if (event.target === imagePreviewModal) {
+    closeImagePreview();
+  }
+};
+setTimeout(() => {
+  addMessage("Hello! I'm your AI assistant. How can I help you today?", false);
+}, 500);
+async function toggleCamera() {
+  const videoContainer = document.getElementById('videoContainer');
+  const videoElement = document.getElementById('userVideo');
+  const cameraBtn = document.querySelector('.camera-btn');
+  const avatarContainer = document.querySelector('.user-screen .avatar');
+  if (!isCameraOn) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: 150,
+          height: 150,
+          facingMode: 'user'
+        }
+      });
+      videoStream = stream;
+      videoElement.srcObject = stream;
+      videoContainer.style.display = 'block';
+      avatarContainer.style.display = 'none';
+      isCameraOn = true;
+      cameraBtn.textContent = '📹 Turn Off Camera';
+      cameraBtn.classList.add('active');
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+      alert('Unable to access camera. Please make sure you have granted camera permissions.');
+    }
+  } else {
+    if (videoStream) {
+      videoStream.getTracks().forEach(track => track.stop());
+      videoStream = null;
+    }
+    videoElement.srcObject = null;
+    videoContainer.style.display = 'none';
+    avatarContainer.style.display = 'block';
+    isCameraOn = false;
+    cameraBtn.textContent = '📹 Turn On Camera';
+    cameraBtn.classList.remove('active');
+  }
+}
+async function changeLanguage(lang) {
+  currentLanguage = lang;
+  document.getElementById('languageList').classList.remove('show');
+  const languageNames = {
+    en: 'English',
+    es: 'Spanish',
+    fr: 'French',
+    de: 'German',
+    it: 'Italian',
+    pt: 'Portuguese',
+    ja: 'Japanese',
+    zh: 'Chinese'
+  };
+  addMessage(`Language changed to ${languageNames[lang]}. How can I help you?`, false);
+  const placeholders = {
+    en: "Type your message...",
+    es: "Escribe tu mensaje...",
+    fr: "Écrivez votre message...",
+    de: "Schreiben Sie Ihre Nachricht...",
+    it: "Scrivi il tuo messaggio...",
+    pt: "Digite sua mensagem...",
+    ja: "メッセージを入力...",
+    zh: "输入信息..."
+  };
+  document.getElementById('messageInput').placeholder = placeholders[lang];
+  if (recognition) {
+    recognition.lang = lang + '-' + lang.toUpperCase();
+  }
+}
+function initSpeechRecognition() {
+  if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = currentLanguage + '-' + currentLanguage.toUpperCase();
+    recognition.onstart = () => {
+      document.getElementById('speechStatus').textContent = 'Listening...';
+    };
+    recognition.onresult = event => {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById('messageInput').value = transcript;
+      sendMessage();
+    };
+    recognition.onerror = event => {
+      console.error('Speech recognition error:', event.error);
+      document.getElementById('speechStatus').textContent = 'Error: ' + event.error;
+      toggleMicrophone();
+    };
+    recognition.onend = () => {
+      if (isListening) {
+        recognition.start();
+      } else {
+        document.getElementById('speechStatus').textContent = '';
+      }
+    };
+  } else {
+    alert('Speech recognition is not supported in your browser.');
+  }
+}
+function speakAIResponse(text) {
+  if (isListening && 'speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = currentLanguage + '-' + currentLanguage.toUpperCase();
+    utterance.onend = () => {
+      if (isListening) {
+        recognition.start();
+      }
+    };
+    speechSynthesis.speak(utterance);
+  }
+}
+function toggleMicrophone() {
+  const micBtn = document.querySelector('.mic-btn');
+  if (!recognition) {
+    initSpeechRecognition();
+  }
+  if (!isListening) {
+    isListening = true;
+    micBtn.classList.add('active');
+    micBtn.textContent = '🎤 Stop Voice Chat';
+    recognition.start();
+  } else {
+    isListening = false;
+    micBtn.classList.remove('active');
+    micBtn.textContent = '🎤 Start Voice Chat';
+    recognition.stop();
+    speechSynthesis.cancel();
+    document.getElementById('speechStatus').textContent = '';
+  }
+}
+function addToClipboard(content, imageUrl = null) {
+  const item = {
+    id: Date.now(),
+    content,
+    imageUrl
+  };
+  clipboardItems.push(item);
+  updateClipboard();
+}
+function removeFromClipboard(id) {
+  clipboardItems = clipboardItems.filter(item => item.id !== id);
+  updateClipboard();
+}
+function updateClipboard() {
+  const clipboardDiv = document.getElementById('clipboard');
+  clipboardDiv.innerHTML = '';
+  clipboardItems.forEach(item => {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'clipboard-item';
+    if (item.imageUrl) {
+      const img = document.createElement('img');
+      img.src = item.imageUrl;
+      itemDiv.appendChild(img);
+    }
+    const content = document.createElement('div');
+    content.textContent = item.content;
+    itemDiv.appendChild(content);
+    const actions = document.createElement('div');
+    actions.className = 'clipboard-actions';
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'clipboard-btn delete-btn';
+    deleteBtn.textContent = '🗑️';
+    deleteBtn.onclick = () => removeFromClipboard(item.id);
+    actions.appendChild(deleteBtn);
+    itemDiv.appendChild(actions);
+    clipboardDiv.appendChild(itemDiv);
+  });
+}
+</script>
+</body></html>
